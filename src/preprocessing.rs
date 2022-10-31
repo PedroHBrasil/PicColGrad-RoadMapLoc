@@ -6,10 +6,14 @@ use std::fs;
 use std::path::Path;
 
 #[derive(Deserialize)]
+/// Contains all the program's inputs.
+/// Use as in function load_input.
 pub struct Input {
+    /// Path to image file.
     pub img_path: String,
 }
 
+/// Loads the inputs from the json file, storing them on an Input struct.
 pub fn load_input() -> Input {
     let json_path = Path::new("./data/input.json");
     let json_file = fs::read_to_string(json_path).unwrap();
@@ -18,6 +22,7 @@ pub fn load_input() -> Input {
     input
 }
 
+/// Loads an image given its address.
 pub fn load_image(img_path: &str) -> DynamicImage {
     ImageReader::open(img_path).unwrap().decode().unwrap()
 }
