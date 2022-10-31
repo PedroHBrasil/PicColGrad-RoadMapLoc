@@ -5,12 +5,14 @@ use serde_json;
 use std::fs;
 use std::path::Path;
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 /// Contains all the program's inputs.
 /// Use as in function load_input.
 pub struct Input {
     /// Path to image file.
     pub img_path: String,
+    /// Number of colors to interpret in image
+    pub n_read_colors: u8,
 }
 
 /// Loads the inputs from the json file, storing them on an Input struct.
