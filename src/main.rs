@@ -8,7 +8,7 @@ fn main() {
     let img = preprocessing::load_image(&input.img_path);
 
     // Processing
-    let img_gs = processing::process_img(img);
+    let img_gs = processing::process_img(input.n_read_colors, img);
 
     // Post-Processing
     postprocessing::save_img(img_gs);
