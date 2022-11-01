@@ -11,8 +11,10 @@ use std::path::Path;
 pub struct Input {
     /// Path to image file.
     pub img_path: String,
-    /// Number of colors to interpret in image
-    pub n_read_colors: u8,
+    /// Number of gray shades to interpret in image
+    pub n_shades: u8,
+    /// Number of gradient directions to evaluate
+    pub n_grad_dir: u32,
 }
 
 /// Loads the inputs from the json file, storing them on an Input struct.

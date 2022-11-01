@@ -1,4 +1,5 @@
 {
     "img_path": "./data/img/test.jpeg",
-    "n_read_colors": 5
+    "n_shades": 5,
+    "n_grad_dir": 5
 }
