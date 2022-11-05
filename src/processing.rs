@@ -95,8 +95,13 @@ fn find_i_min_grad_dir(
         grads.push(calc_grad(&subpixels, *direct, n_pixel_layers));
     }
     // Gets index of direction of minimal gradient
+    let min_grad = grads
+        .iter()
+        .min_by(|a, b| a.partial_cmp(b).unwrap())
+        .unwrap();
+    let i_min_grad = grads.iter().position(|grad| *grad == *min_grad).unwrap() as u32;
 
-    0
+    i_min_grad
 }
 
 /// Computes the color gradient for a pixel set in a given direction.
@@ -152,16 +157,23 @@ mod tests {
 
     fn img_factory(width: u32, height: u32, grad_dir: f64) -> GrayAlphaImage {
         // Finds ratios and virtual image sizes
-        let x_ratio = grad_dir.cos() / (grad_dir.cos() + grad_dir.sin());
-        let y_ratio = grad_dir.sin() / (grad_dir.cos() + grad_dir.sin());
-        let (width_virt, height_virt) = (width as f64 * x_ratio, height as f64 * y_ratio);
+        println!("grad_dir: {}", grad_dir);
+        println!("grad_dir_cos: {}", grad_dir.cos());
+        println!("grad_dir_sin: {}", grad_dir.sin());
+        let x_ratio = grad_dir.cos().abs() / (grad_dir.cos().abs() + grad_dir.sin().abs());
+        let y_ratio = grad_dir.sin().abs() / (grad_dir.cos().abs() + grad_dir.sin().abs());
+        let (width_virt, height_virt) =
+            ((width - 1) as f64 * x_ratio, (height - 1) as f64 * y_ratio);
+        println!("x_ratio: {}, y_ratio: {}", x_ratio, y_ratio);
+        println!("w: {}, h: {}", width_virt, height_virt);
         // Makes image buffer
         let img = ImageBuffer::from_fn(width, height, |x, y| -> LumaA<u8> {
             // Makes pixel according to the gradient direction pattern
             let (x_virt, y_virt) = (x as f64 * x_ratio, y as f64 * y_ratio);
+            println!("x: {}, y: {}", x_virt, y_virt);
             let ratio = (x_virt + y_virt) / (width_virt + height_virt);
             let shade = (std::u8::MAX as f64 * ratio) as u8;
-            LumaA([shade; 2])
+            LumaA([shade, std::u8::MAX])
         });
 
         img
@@ -185,6 +197,35 @@ mod tests {
                 None,
                 Some(img_gs.get_pixel(1, 0)),
                 Some(img_gs.get_pixel(1, 1)),
+            ],
+        ];
+        let result = get_subpixels(&img_gs, x, y, 1);
+
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn get_subpixels_5x5_x2_y2_n1() {
+        let x = 2;
+        let y = 2;
+
+        let img_gs: GrayAlphaImage = img_factory(5, 5, 3.0 * PI / 4.0);
+
+        let expected = vec![
+            vec![
+                Some(img_gs.get_pixel(1, 1)),
+                Some(img_gs.get_pixel(1, 2)),
+                Some(img_gs.get_pixel(1, 3)),
+            ],
+            vec![
+                Some(img_gs.get_pixel(2, 1)),
+                Some(img_gs.get_pixel(2, 2)),
+                Some(img_gs.get_pixel(2, 3)),
+            ],
+            vec![
+                Some(img_gs.get_pixel(3, 1)),
+                Some(img_gs.get_pixel(3, 2)),
+                Some(img_gs.get_pixel(3, 3)),
             ],
         ];
         let result = get_subpixels(&img_gs, x, y, 1);
