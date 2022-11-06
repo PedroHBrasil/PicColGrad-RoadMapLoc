@@ -47,6 +47,18 @@ Here's the global algorithm:
 
 ```
 
+## Map Image
+
+TO DO
+
+## Merge Images
+
+TO DO
+
+## Grayscale Image Algorithm
+
+Uses image crate's into_luma_alpha8 function.
+
 ## Shade Regions Determination Algorithm
 
 Here's the algorithm to find the shade regions as a flowchart:
@@ -64,7 +76,7 @@ Here's the algorithm to find the shade regions as a flowchart:
 
     pxlAllocInit[Init. Pixel Allocated Vec];
 
-    skipAlloc[Skip Alloc];
+    nextPixel[Next Pixel];
     pxlAllocLoop[Pixel Allocation Loop];
     pxlAllocDec{Pixel <br>Allocated?};
     newRegion[New Region];
@@ -84,12 +96,12 @@ Here's the algorithm to find the shade regions as a flowchart:
     
     pxlAllocInit --> pxlAllocLoop
     pxlAllocLoop -.-> pxlAllocDec
-    pxlAllocDec -.-> |yes|skipAlloc
+    pxlAllocDec -.-> |yes|nextPixel
     pxlAllocDec -.-> |no|newRegion
     newRegion -.-> pxlAlloc
     pxlAlloc -.-> pxlAllocNeighbors
     pxlAllocNeighbors -.-> pxlAllocNeighborCheck
-    pxlAllocNeighborCheck -.-> |yes|skipAlloc
+    pxlAllocNeighborCheck -.-> |yes|nextPixel
     pxlAllocNeighborCheck -.-> |no|pxlAllocNeighborsShadeCheck
     pxlAllocNeighborsShadeCheck -.-> |yes|pxlAllocNeighbor
     pxlAllocNeighborsShadeCheck -.-> |no|pxlAllocNeighbors
@@ -97,3 +109,11 @@ Here's the algorithm to find the shade regions as a flowchart:
     pxlAllocLoop --> return
 
 ```
+
+## Shade Gradients Algorithm
+
+TO DO (already implemented)
+
+## Straight Lines Image Algorithm
+
+TO DO
