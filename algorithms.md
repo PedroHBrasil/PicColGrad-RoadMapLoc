@@ -71,7 +71,7 @@ Here's the algorithm to find the shade regions as a flowchart:
     pxlAlloc[Allocate Pixel to New Region];
     pxlAllocNeighborCheck{All Neighbors <br> Allocated?}
     pxlAllocNeighbors[Neighbor Pixels Allocation <br> Recursive];
-    pxlAllocNeighborsShadeCheck{Neighbor Pixel Shade <br> == <br> Pixel Shade?};
+    pxlAllocNeighborsShadeCheck{Neighbor <br> Pixel Shade <br> == <br> Pixel Shade?};
     pxlAllocNeighbor[Allocate Neighbor Pixel to New Region];
 
     return([Returns Region Structs Vec]);
@@ -87,13 +87,13 @@ Here's the algorithm to find the shade regions as a flowchart:
     pxlAllocDec -.-> |yes|skipAlloc
     pxlAllocDec -.-> |no|newRegion
     newRegion -.-> pxlAlloc
-    pxlAlloc -.-> pxlAllocNeighborCheck
+    pxlAlloc -.-> pxlAllocNeighbors
+    pxlAllocNeighbors -.-> pxlAllocNeighborCheck
     pxlAllocNeighborCheck -.-> |yes|skipAlloc
-    pxlAllocNeighborCheck -.-> |no|pxlAllocNeighbors
-    pxlAllocNeighbors -.-> pxlAllocNeighborsShadeCheck
+    pxlAllocNeighborCheck -.-> |no|pxlAllocNeighborsShadeCheck
     pxlAllocNeighborsShadeCheck -.-> |yes|pxlAllocNeighbor
-    pxlAllocNeighborsShadeCheck -.-> |no|skipAlloc
-    pxlAllocNeighbor -.-> pxlAllocNeighborCheck
+    pxlAllocNeighborsShadeCheck -.-> |no|pxlAllocNeighbors
+    pxlAllocNeighbor -.-> pxlAllocNeighbors
     pxlAllocLoop --> return
 
 ```
