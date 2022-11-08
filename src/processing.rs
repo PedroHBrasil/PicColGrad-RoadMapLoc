@@ -38,7 +38,8 @@ impl ShadeRegion {
             // Index of first coordinate to look for neighbors
             let i_first_coord = self.coords.len() - n_coords_to_check;
             // Finds neighbors to push to this region
-            let mut coords_to_push: Vec<(u32, u32)> = Vec::new();
+            let mut coords_to_push: Vec<(u32, u32)> =
+                Vec::with_capacity(8 * (self.coords.len() - i_first_coord));
             for ref_coords in self.coords[i_first_coord..self.coords.len()].iter() {
                 let mut neighbors_to_append =
                     self.find_neighbors(ref_coords, img_gs, i_shades, alloc_pixels);
@@ -47,11 +48,13 @@ impl ShadeRegion {
             // Updates number of coordinates to check
             n_coords_to_check = coords_to_push.len();
             // Pushes new coords to region
-            for new_coords in coords_to_push {
+            for new_coords in coords_to_push.into_iter() {
                 self.coords.push(new_coords);
                 alloc_pixels[new_coords.0 as usize][new_coords.1 as usize] = true;
             }
         }
+        // Removes unused space
+        self.coords.shrink_to_fit();
     }
 
     /// Adds the reference pixel's neighbors that have the same shade index
@@ -60,15 +63,15 @@ impl ShadeRegion {
         ref_coords: &(u32, u32),
         img_gs: &GrayAlphaImage,
         i_shades: &Vec<Vec<u8>>,
-        alloc_pixels: &Vec<Vec<bool>>,
+        alloc_pixels: &mut Vec<Vec<bool>>,
     ) -> Vec<(u32, u32)> {
         // Checks and adds horizontal and vertical neighbors
-        let mut coords_to_add = Vec::new();
+        let mut coords_to_add = Vec::with_capacity(8);
         for coord_delta in [(-1, 0), (1, 0), (0, -1), (0, 1)] {
             let x = ref_coords.0 as i32 + coord_delta.0;
             let y = ref_coords.1 as i32 + coord_delta.1;
             // Skips if pixel coordinates is out of bounds
-            if x < 0 || y < 0 || x >= img_gs.width() as i32 || y >= img_gs.width() as i32 {
+            if x < 0 || y < 0 || x >= img_gs.width() as i32 || y >= img_gs.height() as i32 {
                 continue;
             }
             // Checks if the shade of the current neighbor is equal to the region and if the
@@ -78,6 +81,7 @@ impl ShadeRegion {
             {
                 // Assigns the pixel's coordinates to the region
                 coords_to_add.push((x as u32, y as u32));
+                alloc_pixels[x as usize][y as usize] = true;
             }
         }
 
@@ -94,7 +98,6 @@ fn find_color_regions(n_shades: u8, img_gs: &GrayAlphaImage) -> Vec<ShadeRegion>
     // Creates and finds the regions for each cluster of pixels with equal shade index
     let mut alloc_pixels = vec![vec![false; img_gs.height() as usize]; img_gs.width() as usize];
     let mut shade_regions = Vec::new();
-    // Sets up progressbar
     let pb = ProgressBar::new(img_gs.pixels().len() as u64);
     println!("Making shade regions");
     for (x, y, _) in pb.wrap_iter(img_gs.enumerate_pixels()) {
@@ -103,14 +106,24 @@ fn find_color_regions(n_shades: u8, img_gs: &GrayAlphaImage) -> Vec<ShadeRegion>
         if allocated {
             continue;
         }
-        // Initializes, adds and fills a new region
+        // Initializes a new region
         let i_shade: u8 = i_shades[x as usize][y as usize];
+        let n_to_alloc = img_gs.pixels().len()
+            - alloc_pixels
+                .iter()
+                .flatten()
+                .filter(|allocated| **allocated)
+                .count();
         let mut shade_region = ShadeRegion {
-            coords: vec![(x, y)],
+            coords: Vec::with_capacity(2 * n_to_alloc),
             i_shade,
         };
+        // Adds first pixel
+        shade_region.coords.push((x, y));
         alloc_pixels[x as usize][y as usize] = true;
+        // Adds remaining pixels of the region
         shade_region.find_all_coords(img_gs, &i_shades, &mut alloc_pixels);
+        // Adds region to regions vec
         shade_regions.push(shade_region);
     }
 
@@ -310,14 +323,14 @@ mod tests {
         };
 
         let i_shades = det_i_shades(3, &img_gs);
-        let alloc_pixels = vec![vec![false; img_gs.height() as usize]; img_gs.width() as usize];
+        let mut alloc_pixels = vec![vec![false; img_gs.height() as usize]; img_gs.width() as usize];
 
         for shade_vec in &i_shades {
             println!("i_shades_col: {:?}", shade_vec);
         }
 
         let expected = vec![(0, 0), (0, 2)];
-        let result = shade_region.find_neighbors(&(0, 1), &img_gs, &i_shades, &alloc_pixels);
+        let result = shade_region.find_neighbors(&(0, 1), &img_gs, &i_shades, &mut alloc_pixels);
 
         assert_eq!(expected, result);
     }
