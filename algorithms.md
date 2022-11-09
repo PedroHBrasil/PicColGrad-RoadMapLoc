@@ -110,10 +110,84 @@ Here's the algorithm to find the shade regions as a flowchart:
 
 ```
 
-## Shade Gradients Algorithm
+## Shade Minimum Gradient Directions Algorithm
 
-TO DO (already implemented)
+Here's the algorithm to find the shade gradients as a flowchart (*: Inner flowcharts bellow):
 
+
+```mermaid
+
+    graph TD;
+
+    init([Find Size of Subpixels Matrix])
+
+    dirStep[Calculate Directions Angular Step]
+    dirEvalVecLoop[Calculate Directions/Angles to Evaluate]
+    dirIdx[Get Direction Index]
+    dir[Calculate Direction]
+
+    initMinGradDirMap[Initialize Min. Grad. Directions Map]
+    minGradDirMapLoop[Fill Min. Grad. Directions Map]
+    refPixelCoord[Get Reference Pixel Coordinates]
+
+    minGradDir[Get Direction of Minimal Gradient]
+
+    subpxl[Get Subpixels*]
+    dirGradLoop[Calculate Gradient for Each Direction*] 
+
+    return([Min Gradient Directions Map])
+
+    init --> dirStep
+    dirStep --> dirEvalVecLoop
+
+    dirEvalVecLoop -.-> dirIdx
+    dirIdx -.-> dir
+    dir -.-> dirEvalVecLoop
+
+    dirEvalVecLoop --> initMinGradDirMap
+    initMinGradDirMap --> minGradDirMapLoop
+
+    minGradDirMapLoop -.-> refPixelCoord
+    refPixelCoord -.-> subpxl
+    subpxl -.-> dirGradLoop
+    dirGradLoop -.-> minGradDir
+    minGradDir -.-> minGradDirMapLoop
+
+    minGradDirMapLoop --> return
+
+```
+
+```mermaid
+
+    graph TD;
+
+    subpxl[Get Subpixels*]
+    nLayers[Get Number of Layers]
+    detPxlCoordRng[Determine Pixel <br> Coordinate Ranges]
+    fillSubpxl[Add Pixels to Subpixels]
+
+    subpxl -.-> nLayers
+    nLayers -.-> detPxlCoordRng
+    detPxlCoordRng -.-> fillSubpxl
+    fillSubpxl -.-> subpxl
+
+```
+
+```mermaid
+
+    graph TD;
+
+    dirGradLoop[Calculate Gradient for Each Direction*]
+    getPxlLine[Get Pixels in Direction]
+    calcDiff[Calculate Differentials]
+    calcGrad[Calculate Gradient]
+
+    dirGradLoop -.-> getPxlLine
+    getPxlLine -.-> calcDiff
+    calcDiff -.-> calcGrad
+    calcGrad -.-> dirGradLoop
+
+```
 ## Straight Lines Image Algorithm
 
 TO DO
