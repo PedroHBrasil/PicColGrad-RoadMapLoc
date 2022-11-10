@@ -1,15 +1,15 @@
-mod postprocessing;
-mod preprocessing;
-mod processing;
+mod image_processor;
+mod input_reader;
+mod output_writer;
 
 fn main() {
     // Pre-Processing
-    let input = preprocessing::load_input();
-    let img = preprocessing::load_image(&input.img_path);
+    let input = input_reader::load_input();
+    let img = input_reader::load_image(&input.img_path);
 
     // Processing
-    let img_gs = processing::run(img, input.n_shades, input.n_grad_dir).unwrap();
+    let img_gs = image_processor::run(img, input.n_shades, input.n_grad_dir).unwrap();
 
     // Post-Processing
-    postprocessing::save_img(img_gs);
+    output_writer::save_img(img_gs);
 }

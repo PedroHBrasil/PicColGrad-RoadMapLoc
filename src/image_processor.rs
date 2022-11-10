@@ -1,4 +1,4 @@
-use image::{DynamicImage, GrayAlphaImage, ImageBuffer, LumaA, Pixel};
+use image::{DynamicImage, GrayAlphaImage, ImageBuffer, LumaA};
 use indicatif::ProgressBar;
 use std::{f64::consts::PI, fmt::Error};
 
