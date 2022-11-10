@@ -1,3 +1,5 @@
+use std::fmt::Error;
+
 use image::GrayAlphaImage;
 
 /// Represents a shade region of a grayscale image.
@@ -72,6 +74,16 @@ impl ShadeRegion {
         }
 
         coords_to_add
+    }
+
+    /// Calculates the average minimum shade gradient direction for this region.
+    pub fn calc_avg_min_grad_dirs(&mut self, min_grad_map: &Vec<Vec<f64>>) -> Result<(), Error> {
+        for (x, y) in self.coords.iter() {
+            self.avg_min_grad_dir += min_grad_map[*x as usize][*y as usize];
+        }
+        self.avg_min_grad_dir /= self.coords.len() as f64;
+
+        Ok(())
     }
 }
 

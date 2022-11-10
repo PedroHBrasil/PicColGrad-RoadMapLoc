@@ -7,8 +7,9 @@ pub mod shade_region;
 /// Processes an image.
 pub fn run(img: DynamicImage, n_shades: u8, n_grad_dir: u32) -> Result<GrayAlphaImage, Error> {
     let mut img_proc = ImageProcessor::build(img, n_shades, n_grad_dir);
+    println!("Making shade regions...");
     img_proc.gen_shade_regions()?;
-    img_proc.gen_min_grad_map();
+    img_proc.calc_regions_avg_min_grad_dirs()?;
     //TODO Make straight lines filter function.
 
     Ok(ImageBuffer::new(1, 1))
@@ -52,7 +53,6 @@ impl ImageProcessor {
         let mut alloc_pixels =
             vec![vec![false; self.img.height() as usize]; self.img.width() as usize];
         let pb = ProgressBar::new(self.img.pixels().len() as u64);
-        println!("Making shade regions");
         for (x, y, _) in pb.wrap_iter(self.img.enumerate_pixels()) {
             // Checks if the pixel has already been allocated
             let allocated = alloc_pixels[x as usize][y as usize];
@@ -103,29 +103,53 @@ impl ImageProcessor {
         i_shades
     }
 
+    /// Calculates the regions' average minimum shade gradient directions.
+    fn calc_regions_avg_min_grad_dirs(&mut self) -> Result<(), Error> {
+        // Generates the minimum shade gradient directions map
+        println!("Calculating pixels' minimum shade gradient directions map...");
+        let min_grad_map = self.gen_min_grad_map();
+        // Finds average min grad direction for each region
+        println!("Finding regions' average minimum shade gradient directions...");
+        let pb = ProgressBar::new(self.shade_regions.len() as u64);
+        for region in pb.wrap_iter(self.shade_regions.iter_mut()) {
+            region.calc_avg_min_grad_dirs(&min_grad_map)?;
+        }
+
+        Ok(())
+    }
+
     /// Generates the minimum shade gradient map for a grayscale image. This map contains the directions
     /// to where the shade changes less for each pixel, relative to the other analyzed directions.
     fn gen_min_grad_map(&self) -> Vec<Vec<f64>> {
         // Finds radius of gradient analysis
-        let n_pixel_layers = self.n_grad_dir / 4 + 1;
+        let n_layers = self.n_grad_dir / 4 + 1;
         // Generates test directions vector
-        let mut test_directs = Vec::new();
-        for i_dir in 0..self.n_grad_dir {
-            test_directs.push(i_dir as f64 * PI / self.n_grad_dir as f64);
-        }
+        let directs_to_eval = self.gen_directs_to_eval();
         // Finds the direction of minimum gradient for each pixel
         let mut min_grad_directs_map =
             vec![vec![0.0; self.img.height() as usize]; self.img.width() as usize];
-        for (x, y, _) in self.img.enumerate_pixels() {
+        let pb = ProgressBar::new(self.img.pixels().len() as u64);
+        for (x, y, _) in pb.wrap_iter(self.img.enumerate_pixels()) {
             // Gets current subset of pixels
-            let mut pixel_subset = pixel_subset::PixelSubset::new(&self.img, n_pixel_layers);
+            let mut pixel_subset = pixel_subset::PixelSubset::new(&self.img, n_layers);
             pixel_subset.fill((x, y)).unwrap();
             // Finds direction of minimal shade gradient
-            let i_min_grad_dir = pixel_subset.find_i_min_grad_dir(&test_directs);
-            min_grad_directs_map[x as usize][y as usize] = test_directs[i_min_grad_dir as usize];
+            let i_min_grad_dir = pixel_subset.find_i_min_grad_dir(&directs_to_eval);
+            min_grad_directs_map[x as usize][y as usize] = directs_to_eval[i_min_grad_dir as usize];
         }
 
         min_grad_directs_map
+    }
+
+    /// Generates the directions for shade gradient evaluation.
+    fn gen_directs_to_eval(&self) -> Vec<f64> {
+        let step = PI / self.n_grad_dir as f64;
+        let mut directs_to_eval = Vec::with_capacity(self.n_grad_dir as usize);
+        for i_dir in 0..self.n_grad_dir {
+            directs_to_eval.push(i_dir as f64 * step);
+        }
+
+        directs_to_eval
     }
 }
 
@@ -160,38 +184,55 @@ mod tests {
         let img_gs = test_util::tests::img_grad_factory(5, 5, 0.0);
         let n_shades = 5;
 
-        let mut img_proc = ImageProcessor::build(DynamicImage::ImageLumaA8(img_gs), n_shades, 3);
+        let mut img_proc = ImageProcessor::build(DynamicImage::ImageLumaA8(img_gs), n_shades, 5);
         img_proc.gen_shade_regions().unwrap();
 
         let expected = vec![
-            shade_region::ShadeRegion {
-                coords: vec![(0, 0), (0, 1), (0, 2), (0, 3), (0, 4)],
-                i_shade: 0,
-                avg_min_grad_dir: 0.0,
-            },
-            shade_region::ShadeRegion {
-                coords: vec![(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)],
-                i_shade: 1,
-                avg_min_grad_dir: 0.0,
-            },
-            shade_region::ShadeRegion {
-                coords: vec![(2, 0), (2, 1), (2, 2), (2, 3), (2, 4)],
-                i_shade: 2,
-                avg_min_grad_dir: 0.0,
-            },
-            shade_region::ShadeRegion {
-                coords: vec![(3, 0), (3, 1), (3, 2), (3, 3), (3, 4)],
-                i_shade: 3,
-                avg_min_grad_dir: 0.0,
-            },
-            shade_region::ShadeRegion {
-                coords: vec![(4, 0), (4, 1), (4, 2), (4, 3), (4, 4)],
-                i_shade: 4,
-                avg_min_grad_dir: 0.0,
-            },
+            vec![(0, 0), (0, 1), (0, 2), (0, 3), (0, 4)],
+            vec![(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)],
+            vec![(2, 0), (2, 1), (2, 2), (2, 3), (2, 4)],
+            vec![(3, 0), (3, 1), (3, 2), (3, 3), (3, 4)],
+            vec![(4, 0), (4, 1), (4, 2), (4, 3), (4, 4)],
         ];
 
-        let result = img_proc.shade_regions;
+        let result: Vec<Vec<(u32, u32)>> = img_proc
+            .shade_regions
+            .into_iter()
+            .map(|region| region.coords)
+            .collect();
+
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn gen_directs_to_eval4() {
+        let img_gs = test_util::tests::img_grad_factory(5, 5, 0.0);
+        let n_shades = 5;
+
+        let img_proc = ImageProcessor::build(DynamicImage::ImageLumaA8(img_gs), n_shades, 4);
+
+        let expected = vec![0.0, PI / 4.0, PI / 2.0, 3.0 * PI / 4.0];
+        let result = img_proc.gen_directs_to_eval();
+
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn calc_regions_avg_min_grad_dirs_5x5_dir_pi4() {
+        let img_gs = test_util::tests::img_grad_factory(5, 5, 0.0);
+        let n_shades = 5;
+
+        let mut img_proc = ImageProcessor::build(DynamicImage::ImageLumaA8(img_gs), n_shades, 2);
+        img_proc.gen_shade_regions().unwrap();
+        img_proc.calc_regions_avg_min_grad_dirs().unwrap();
+
+        let expected = vec![0.0; 5];
+
+        let result: Vec<f64> = img_proc
+            .shade_regions
+            .into_iter()
+            .map(|region| region.avg_min_grad_dir)
+            .collect();
 
         assert_eq!(expected, result);
     }

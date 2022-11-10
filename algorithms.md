@@ -110,7 +110,7 @@ Here's the algorithm to find the shade regions as a flowchart:
 
 ```
 
-## Shade Minimum Gradient Directions Algorithm
+## Shade Regions Average Minimum Gradient Directions Algorithm
 
 Here's the algorithm to find the shade gradients as a flowchart (*: Inner flowcharts bellow):
 
@@ -135,7 +135,13 @@ Here's the algorithm to find the shade gradients as a flowchart (*: Inner flowch
     subpxl[Get Subpixels*]
     dirGradLoop[Calculate Gradient for Each Direction*] 
 
-    return([Min Gradient Directions Map])
+    regsAvgMinGradDir[Determine Regions Average <br> Min. Gradient Directions Map]
+
+    getCurRegion[Get Current Region]
+    getCurPxlGradDir[Get Pixels' Min. <br> Gradient Directions]
+    calcAvgGradDir[Calculate Pixels' Average <br> Min. Gradient Direction]
+
+    return([Shade Regions with Average <br> Min. Gradient Directions])
 
     init --> dirStep
     dirStep --> dirEvalVecLoop
@@ -153,7 +159,14 @@ Here's the algorithm to find the shade gradients as a flowchart (*: Inner flowch
     dirGradLoop -.-> minGradDir
     minGradDir -.-> minGradDirMapLoop
 
-    minGradDirMapLoop --> return
+    minGradDirMapLoop --> regsAvgMinGradDir
+
+    regsAvgMinGradDir -.-> getCurRegion
+    getCurRegion -.-> getCurPxlGradDir
+    getCurPxlGradDir -.-> calcAvgGradDir
+    calcAvgGradDir -.-> regsAvgMinGradDir
+
+    regsAvgMinGradDir --> return
 
 ```
 
@@ -190,4 +203,18 @@ Here's the algorithm to find the shade gradients as a flowchart (*: Inner flowch
 ```
 ## Straight Lines Image Algorithm
 
-TO DO
+
+```mermaid
+
+    graph TD;
+
+    init([start]);
+
+    detRegAvgGradDir[Determine Regions' Average Gradient Direction];
+
+
+    return([end]);
+
+    init --> detRegAvgGradDir
+
+```
