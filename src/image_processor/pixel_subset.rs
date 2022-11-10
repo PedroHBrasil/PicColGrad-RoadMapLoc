@@ -121,7 +121,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn get_subpixels_5x5_x0_y0_n1() {
+    fn fill_5x5_x0_y0_n1() {
         let x = 0;
         let y = 0;
 
@@ -148,7 +148,7 @@ mod tests {
     }
 
     #[test]
-    fn get_subpixels_5x5_x2_y2_n1() {
+    fn fill_5x5_x2_y2_n1() {
         let x = 2;
         let y = 2;
 

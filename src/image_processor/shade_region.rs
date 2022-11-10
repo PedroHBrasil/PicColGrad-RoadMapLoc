@@ -84,7 +84,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn shade_region_find_neighbors() {
+    fn find_neighbors() {
         let img_gs = test_util::tests::img_grad_factory(3, 3, 0.0);
 
         let shade_region = ShadeRegion {
@@ -110,7 +110,7 @@ mod tests {
     }
 
     #[test]
-    fn shade_region_find_all_coords() {
+    fn find_all_coords() {
         let img_gs = test_util::tests::img_grad_factory(5, 5, 0.0);
 
         let img_proc = ImageProcessor::build(DynamicImage::ImageLumaA8(img_gs), 5, 3);

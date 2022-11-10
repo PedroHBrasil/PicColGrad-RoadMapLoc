@@ -156,7 +156,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn find_color_regions_5x5_dir0() {
+    fn gen_shade_regions_5x5_dir0() {
         let img_gs = test_util::tests::img_grad_factory(5, 5, 0.0);
         let n_shades = 5;
 
