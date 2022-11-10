@@ -1,6 +1,7 @@
 mod image_processor;
 mod input_reader;
 mod output_writer;
+mod test_util;
 
 fn main() {
     // Pre-Processing
