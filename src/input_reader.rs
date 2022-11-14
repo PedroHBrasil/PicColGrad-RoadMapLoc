@@ -15,6 +15,8 @@ pub struct Input {
     pub n_shades: u8,
     /// Number of gradient directions to evaluate
     pub n_grad_dir: u32,
+    /// Number of pixels in a stroke of the output image
+    pub stroke_width: u32,
 }
 
 /// Loads the inputs from the json file, storing them on an Input struct.

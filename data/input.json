@@ -1,5 +1,6 @@
 {
     "img_path": "./data/img/test.jpeg",
     "n_shades": 5,
-    "n_grad_dir": 5
+    "n_grad_dir": 5,
+    "stroke_width": 50
 }
