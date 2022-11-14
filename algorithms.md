@@ -208,13 +208,35 @@ Here's the algorithm to find the shade gradients as a flowchart (*: Inner flowch
 
     graph TD;
 
-    init([start]);
+    init([Initialize Output Image]);
 
-    detRegAvgGradDir[Determine Regions' Average Gradient Direction];
+    strokeWidth[Get Stroke Width]
+    regionsLoop[Shade Regions Loop]
+    getRegionShade[Get Region Average Shade]
+    getRegionGradDir[Get Region Average <br> Minimum Gradient Direction]
+    pxlLoop[Pixel Painting Loop]
+    pxlCoord[Get Pixel Coordinates]
+    calcBlackStrokeWidth[Calculate Black Stroke Width]
+    calcIdxShadeStroke[Calculate Index of Pixel in Stroke]
+    decisionShadeStroke{Index of Pixel in Stroke <br>< Black Stroke Width?}
+    pxlBlack[Paint Pixel Black]
+    pxlWhite[Paint Pixel White]
 
+    return([Return <br> Output Image]);
 
-    return([end]);
-
-    init --> detRegAvgGradDir
+    init
+    --> strokeWidth
+    --> regionsLoop
+        -.-> getRegionShade
+        -.-> getRegionGradDir
+        -.-> pxlLoop
+            -.-> pxlCoord
+            -.-> calcBlackStrokeWidth
+            -.-> calcIdxShadeStroke
+            -.-> decisionShadeStroke
+                decisionShadeStroke -.-> |yes|pxlBlack -.-> pxlLoop
+                decisionShadeStroke -.-> |no|pxlWhite -.-> pxlLoop
+        -.-> regionsLoop
+    --> return 
 
 ```
