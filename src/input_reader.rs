@@ -17,6 +17,8 @@ pub struct Input {
     pub n_grad_dir: u32,
     /// Number of pixels in a stroke of the output image
     pub stroke_width: u32,
+    /// Output file's name
+    pub out_file_name: String,
 }
 
 /// Loads the inputs from the json file, storing them on an Input struct.

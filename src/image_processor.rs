@@ -1,18 +1,22 @@
-use image::{DynamicImage, GrayAlphaImage, ImageBuffer};
+use image::{DynamicImage, GrayAlphaImage};
 use indicatif::ProgressBar;
 use std::{f64::consts::PI, fmt::Error};
 pub mod pixel_subset;
 pub mod shade_region;
 
 /// Processes an image.
-pub fn run(img: DynamicImage, n_shades: u8, n_grad_dir: u32) -> Result<GrayAlphaImage, Error> {
+pub fn run(
+    img: DynamicImage,
+    n_shades: u8,
+    n_grad_dir: u32,
+    stroke_width: u32,
+) -> Result<GrayAlphaImage, Error> {
     let mut img_proc = ImageProcessor::build(img, n_shades, n_grad_dir);
-    println!("Making shade regions...");
     img_proc.gen_shade_regions()?;
     img_proc.calc_regions_avg_min_grad_dirs()?;
-    //TODO Make straight lines filter function.
+    img_proc.make_output_img(stroke_width)?;
 
-    Ok(ImageBuffer::new(1, 1))
+    Ok(img_proc.img)
 }
 
 /// Contains the data needed for the image processing.
@@ -53,6 +57,7 @@ impl ImageProcessor {
         let mut alloc_pixels =
             vec![vec![false; self.img.height() as usize]; self.img.width() as usize];
         let pb = ProgressBar::new(self.img.pixels().len() as u64);
+        println!("Making shade regions...");
         for (x, y, _) in pb.wrap_iter(self.img.enumerate_pixels()) {
             // Checks if the pixel has already been allocated
             let allocated = alloc_pixels[x as usize][y as usize];
@@ -151,25 +156,35 @@ impl ImageProcessor {
 
         directs_to_eval
     }
-}
 
-/// Makes the straight line image based on the grayscale image, the shades regions and the minimal
-/// gradient directions map.
-fn make_straight_lines_img(
-    img_gs: &GrayAlphaImage,
-    i_shades: Vec<u8>,
-    n_shades: u8,
-    grad_dirs: Vec<f64>,
-    n_grad_dir: u32,
-) -> GrayAlphaImage {
-    GrayAlphaImage::new(1, 1)
-}
+    /// Makes the straight line image based on the grayscale image, the shades regions and the minimal
+    /// gradient directions map.
+    fn make_output_img(&mut self, stroke_width: u32) -> Result<(), Error> {
+        println!("Making output image...");
+        // Loops through the regions and finds the shade of each pixel
+        let pb = ProgressBar::new(self.shade_regions.len() as u64);
+        for region in pb.wrap_iter(self.shade_regions.iter()) {
+            // Calculates width of the black substroke of the stroke
+            let black_stroke_width =
+                (region.i_shade as f64 / self.n_shades as f64 * stroke_width as f64) as u32;
+            for (x, y) in region.coords.iter() {
+                // Claculates index of the stroke shade
+                let i_shade_stroke = ((*x as f64 * region.avg_min_grad_dir.cos()
+                    + *y as f64 * region.avg_min_grad_dir.sin())
+                    % stroke_width as f64) as u32;
+                // Decides if pixel is black or white
+                let shade = if i_shade_stroke <= black_stroke_width {
+                    u8::MAX
+                } else {
+                    0
+                };
+                // Sets pixel color in image
+                self.img.get_pixel_mut(*x, *y).0[0] = shade;
+            }
+        }
 
-/// Determines the shade of a pixel of the straight lines filter image based on the region's shade
-/// and the average gradient direction
-fn det_straight_line_pxl_shade(x: u32, y: u32, i_shade: u8, n_shades: u8, avg_grad_dir: f64) -> u8 {
-    //
-    0
+        Ok(())
+    }
 }
 
 #[cfg(test)]
